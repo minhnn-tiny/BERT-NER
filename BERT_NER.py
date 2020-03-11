@@ -23,6 +23,12 @@ import numpy as np
 FLAGS = flags.FLAGS
 
 ## Required parameters
+
+flags.DEFINE_string(
+    "text_test", "Tôi muốn đến trường đại học Bách Khoa",
+    "thie input for test"
+)
+
 flags.DEFINE_string(
     "data_dir", None,
     "The input data dir. Should contain the .tsv files (or other data files) "
@@ -217,6 +223,12 @@ class NerProcessor(DataProcessor):
             self._read_data(os.path.join(data_dir, "test.txt")), "test"
         )
 
+    def get_test_examples_from_user(self, text):
+        guid = 'test'
+        texts = tokenization.convert_to_unicode(text.split())
+        labels = tokenization.convert_to_unicode(['O'] * len(text.split()))
+        examples = [InputExample(guid=guid, text=texts, label=labels]
+        return examples
 
     def get_labels(self):
         """
@@ -395,10 +407,10 @@ def crf_loss(logits,labels,mask,num_labels,mask2len):
                 shape=[num_labels,num_labels],
                 initializer=tf.contrib.layers.xavier_initializer()
         )
-    
+
     log_likelihood,transition = tf.contrib.crf.crf_log_likelihood(logits,labels,transition_params =trans ,sequence_lengths=mask2len)
     loss = tf.math.reduce_mean(-log_likelihood)
-   
+
     return loss,transition
 
 def softmax_layer(logits,labels,num_labels,mask):
@@ -461,12 +473,12 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
         is_training = (mode == tf.estimator.ModeKeys.TRAIN)
         if FLAGS.crf:
             (total_loss, logits,predicts) = create_model(bert_config, is_training, input_ids,
-                                                            mask, segment_ids, label_ids,num_labels, 
+                                                            mask, segment_ids, label_ids,num_labels,
                                                             use_one_hot_embeddings)
 
         else:
             (total_loss, logits, predicts) = create_model(bert_config, is_training, input_ids,
-                                                            mask, segment_ids, label_ids,num_labels, 
+                                                            mask, segment_ids, label_ids,num_labels,
                                                             use_one_hot_embeddings)
         tvars = tf.trainable_variables()
         scaffold_fn = None
@@ -490,7 +502,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
             logging.info("  name = %s, shape = %s%s", var.name, var.shape,
                             init_string)
 
-        
+
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             train_op = optimization.create_optimizer(total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu)
@@ -543,11 +555,11 @@ def Writer(output_predict_file,result,batch_tokens,batch_labels,id2label):
                 predictions.extend(pred)
             for i,prediction in enumerate(predictions):
                 _write_base(batch_tokens,id2label,prediction,batch_labels,wf,i)
-                
+
         else:
             for i,prediction in enumerate(result):
                 _write_base(batch_tokens,id2label,prediction,batch_labels,wf,i)
-            
+
 
 
 def main(_):
@@ -660,8 +672,8 @@ def main(_):
         with open(FLAGS.middle_output+'/label2id.pkl', 'rb') as rf:
             label2id = pickle.load(rf)
             id2label = {value: key for key, value in label2id.items()}
-   
-        predict_examples = processor.get_test_examples(FLAGS.data_dir)
+
+        predict_examples = processor.get_test_examples_from_user(FLAGS.text_test)
 
         predict_file = os.path.join(FLAGS.output_dir, "predict.tf_record")
         batch_tokens,batch_labels = filed_based_convert_examples_to_features(predict_examples, label_list,
