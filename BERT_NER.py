@@ -26,7 +26,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     "text_test", "Tôi muốn đến trường đại học Bách Khoa",
-    "thie input for test"
+    "the input for test"
 )
 
 flags.DEFINE_string(
@@ -227,7 +227,7 @@ class NerProcessor(DataProcessor):
         guid = 'test'
         texts = tokenization.convert_to_unicode(text.split())
         labels = tokenization.convert_to_unicode(['O'] * len(text.split()))
-        examples = [InputExample(guid=guid, text=texts, label=labels]
+        examples = [InputExample(guid=guid, text=texts, label=labels)]
         return examples
 
     def get_labels(self):
