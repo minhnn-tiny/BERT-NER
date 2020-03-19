@@ -1,5 +1,4 @@
 output/result_dir/
-!output/reult_dir/label_test.txt
 __pycache__/
 **data/
 .vscode/
