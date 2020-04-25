@@ -204,7 +204,7 @@ class DataProcessor(object):
             word = line.strip().split(' ')[0]
             label = line.strip().split(' ')[-1]
             # here we dont do "DOCSTART" check
-            if len(line.strip()) == 0 and words[-1] == '.':
+            if len(line.strip()) == 0 and (words[-1] == '.' or words[-1] == '?'):
                 l = ' '.join([label for label in labels if len(label) > 0])
                 w = ' '.join([word for word in words if len(word) > 0])
                 lines.append((l, w))
@@ -246,15 +246,17 @@ class NerProcessor(DataProcessor):
         "[PAD]" for padding
         :return:
         """
-        return ["[PAD]", "B-place", "I-place", "O", "B-place_name", "I-place_name", "B-info_type", "I-info_type", "B-ward", "I-ward",
-                "B-street", "I-street", "B-district", "I-district", "B-place_property", "I-place_property", "B-time", "I-time",
-                "B-address", "I-address", "B-personal_place", "I-personal_place", "B-route_property", "I-route_property",
-                "X", "[CLS]", "[SEP]"]
-        # return ["[PAD]",
-        #         'O', 'B-feature', 'I-feature',
-        #         'B-product', 'I-product',
-        #         'B-app', 'I-app',
-        #         "X", "[CLS]", "[SEP]"]
+        return ['[PAD]', 'O', 'B-place', 'I-place',
+                'B-place_property', 'I-place_property', 'B-district', 'B-ward', 'I-ward',
+                'B-street', 'I-street', 'B-route_property', 'I-route_property', 'B-info_type',
+                'I-info_type', 'I-district', 'B-address', 'B-personal_place', 'I-personal_place',
+                'B-activity', 'I-activity', 'B-time', 'B-date', 'I-time', 'B-action_type', 'B-side',
+                'B-quantity', 'B-air_type', 'I-air_type', 'B-air_temp', 'I-air_temp', 'B-period',
+                'I-period', 'I-date', 'B-news_topic', 'I-news_topic', 'B-radio_channel',
+                'I-radio_channel', 'B-music_genre', 'I-music_genre', 'B-musician', 'I-musician',
+                'B-song_name', 'I-song_name', 'I-action_type', 'B-event', 'I-event',
+                'B-schedule_property', 'I-schedule_property', 'B-location', 'I-location',
+                'X', '[CLS]', '[SEP]']
 
     def _create_example(self, lines, set_type):
         examples = []
@@ -715,8 +717,7 @@ def main(_):
             label2id = pickle.load(rf)
             id2label = {value: key for key, value in label2id.items()}
 
-        predict_examples = processor.get_test_examples_from_user(
-            FLAGS.text_test)
+        predict_examples = processor.get_test_examples(FLAGS.data_dir)
 
         predict_file = os.path.join(FLAGS.output_dir, "predict.tf_record")
         batch_tokens, batch_labels = filed_based_convert_examples_to_features(predict_examples, label_list,
